@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "@oasislabs/parcel": "^1.0.0-beta.13"
+  },
+  "name": "to_docker",
+  "version": "1.0.0",
+  "main": "runjob.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "type": "module"
+}
