@@ -22,12 +22,12 @@ Throughout the training, clients will keep reporting metadata to PyGrid as usual
 
 ## Setup
 
-Please refer to the PyGrid instructions before following the steps for Parcel specific setup:
+Please refer to the PyGrid instructions for environment setup before following the steps for Parcel specific setup:
 
 1. Install the following pip packages: `python-jose`, `jwcrypto` for Parcel API authentication
 2. Build and push the Docker image to Docker Hub using `./Dockerfile`
 3. Set the values of `PARCEL_CLIENT_ID`, `PARCEL_APP_ID`, `PARCEL_JWK`, `DOCKER_IMG_TAG` in `apps/domain/src/main/core/model_centric/cycles/send_avgrequest.py`
-
+4. At `./apps/domain`, run `poetry run python ./src/__main__.py --name bob --port 7001 --start_local_db`
 
 ![PyGrid logo](https://raw.githubusercontent.com/OpenMined/design-assets/master/logos/PyGrid/horizontal-primary-trans.png)
 
