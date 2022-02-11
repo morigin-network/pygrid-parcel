@@ -50,6 +50,8 @@ def host_federated_training(message: dict, socket=None) -> dict:
         serialized_avg_plan = unhexlify(
             data.get(CYCLE.AVG_PLAN, None).encode()
         )  # Only one
+        
+        inference_model = data.get(CYCLE.INFERENCE,None)
         client_config = data.get(CYCLE.CLIENT_CONFIG, None)  # Only one
         server_config = data.get(CYCLE.SERVER_CONFIG, None)  # Only one
 
@@ -61,6 +63,7 @@ def host_federated_training(message: dict, socket=None) -> dict:
             server_averaging_plan=serialized_avg_plan,
             client_config=client_config,
             server_config=server_config,
+            inference=inference_model
         )
         response[CYCLE.STATUS] = RESPONSE_MSG.SUCCESS
     except Exception as e:  # Retrieve exception messages such as missing JSON fields.

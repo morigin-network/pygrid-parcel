@@ -74,3 +74,4 @@ class CYCLE(object):
     AVG_PLAN = "averaging_plan"
     ACCEPTED = "accepted"
     REJECTED = "rejected"
+    INFERENCE = "inference_plan"

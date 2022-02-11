@@ -18,7 +18,7 @@ from ..tasks.cycle import complete_cycle
 from ..tasks.cycle import run_task_once
 from .cycle import Cycle
 from .worker_cycle import WorkerCycle
-from .send_avgrequest import RunAveraging
+from .send_avgrequest import RunAveraging, FinalAveraging
 import base64
 
 
@@ -263,7 +263,8 @@ class CycleManager(DatabaseManager):
         model_params = model_manager.unserialize_model_params(_checkpoint.value)
         logging.info("model params shapes: %s" % str([p.shape for p in model_params]))
         
-        
+        print(_checkpoint.value)
+        print("CHECK")
         orgparam = base64.b64encode(_checkpoint.value).decode("ascii")
         reports_to_average = self._worker_cycles.query(
             cycle_id=cycle.id, is_completed=True
@@ -284,41 +285,48 @@ class CycleManager(DatabaseManager):
         completed_cycles_num = len(
             self._cycles.query(fl_process_id=cycle.fl_process_id, is_completed=True)
         )
-        
-        diff_avg = RunAveraging(diff_ids,orgparam,avgplan,completed_cycles_num)
-
-        logging.info("diff_avg shapes: %s" % str([d.shape for d in diff_avg]))
-
-
-        _updated_model_params = [
-            model_param - diff_param
-            for model_param, diff_param in zip(model_params, diff_avg)
-        ]
-
-        logging.info(
-            "_updated_model_params shapes: %s"
-            % str([p.shape for p in _updated_model_params])
-        )
-
-        # make new checkpoint
-        serialized_params = model_manager.serialize_model_params(_updated_model_params)
-        _new_checkpoint = model_manager.save(model_id, serialized_params)
-        logging.info("new checkpoint: %s" % str(_new_checkpoint))
-
-        # mark current cycle completed
-        cycle.is_completed = True
-        self._cycles.db.session.commit()
-
-        completed_cycles_num = len(
-            self._cycles.query(fl_process_id=cycle.fl_process_id, is_completed=True)
-        )
-        logging.info("completed_cycles_num: %d" % completed_cycles_num)
         max_cycles = server_config.get("num_cycles", 0)
-        if completed_cycles_num < max_cycles or max_cycles == 0:
+        
+        if completed_cycles_num+1 < max_cycles or max_cycles == 0:
+        
+            diff_avg = RunAveraging(diff_ids,orgparam,avgplan,completed_cycles_num)
+
+            logging.info("diff_avg shapes: %s" % str([d.shape for d in diff_avg]))
+
+
+            _updated_model_params = [
+                model_param - diff_param
+                for model_param, diff_param in zip(model_params, diff_avg)
+            ]
+        
+
+            logging.info(
+                "_updated_model_params shapes: %s"
+                % str([p.shape for p in _updated_model_params])
+            )
+
+            # make new checkpoint
+            serialized_params = model_manager.serialize_model_params(_updated_model_params)
+            _new_checkpoint = model_manager.save(model_id, serialized_params)
+            logging.info("new checkpoint: %s" % str(_new_checkpoint))
+
+            # mark current cycle completed
+            cycle.is_completed = True
+            self._cycles.db.session.commit()
+
+            completed_cycles_num = len(
+                self._cycles.query(fl_process_id=cycle.fl_process_id, is_completed=True)
+            )
+            logging.info("completed_cycles_num: %d" % completed_cycles_num)
+        
             # make new cycle
             _new_cycle = self.create(
                 cycle.fl_process_id, cycle.version, server_config.get("cycle_length")
             )
             logging.info("Creating new cycle: %s" % str(_new_cycle))
         else:
+            #add a new job
+            #require additional input?
+            diff_avg = FinalAveraging(diff_ids,orgparam,avgplan,completed_cycles_num,cycle.fl_process_id)
+            logging.info(f"{diff_avg}")
             logging.info("FL is done!")
