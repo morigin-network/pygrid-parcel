@@ -1,0 +1,14 @@
+FROM openmined/grid-domain
+
+RUN mkdir /avgplan
+WORKDIR /avgplan
+RUN git clone https://github.com/OpenMined/PyGrid.git
+COPY requirements_crypten.txt .
+RUN pip install -r requirements_crypten.txt
+
+WORKDIR /avgplan/PyGrid/apps/domain/src/main
+COPY avgfinal.py .
+
+ENTRYPOINT ["python", "avgfinal.py"]
+
+

@@ -28,6 +28,7 @@ class FLController:
         client_config,
         server_config,
         server_averaging_plan,
+        inference,
         client_protocols=None,
     ):
         """Register a new federated learning process
@@ -64,7 +65,12 @@ class FLController:
 
         # Create the initial cycle
         _cycle = cycle_manager.create(_process.id, _process.version, cycle_len)
-
+        
+        #TODO: save it into database instead
+        inference_save_path = f"/pygrid/models/model{_process.id}"
+        with open(inference_save_path,"w") as f:
+            f.write(inference)
+            
         return _process
 
     def last_cycle(self, worker_id: str, name: str, version: str) -> int:
@@ -123,7 +129,7 @@ class FLController:
         # )
         n_completed_cycles = cycle_manager.count(
             fl_process_id=_fl_process.id, is_completed=True
-        )
+        ) - 1
 
         _max_cycles = server_config["num_cycles"]
 
@@ -131,8 +137,9 @@ class FLController:
             (not _assigned)
             and _comp_bandwidth
             and _allowed
-            and n_completed_cycles < _max_cycles
+            and n_completed_cycles <= _max_cycles
         )
+        logging.info(f"{_assigned},{_comp_bandwidth},{_allowed},{n_completed_cycles},{_max_cycles}")
         logging.info(f"Worker is accepted: {_accepted}")
 
         if _accepted:

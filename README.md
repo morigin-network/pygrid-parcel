@@ -13,12 +13,15 @@ Throughout the training, clients will keep reporting metadata to PyGrid as usual
 
 ## List of Modifications
 
-1. `Dockerfile`: the Docker file that is used to build the image for weight averaging, to be used as custom Parcel Job
-2. `apps/domain/src/main/avg.py`: the averaging work used in the Docker image
-3. `apps/domain/src/main/events/model_centric/fl_events.py`:  in the `report` function, the code for doing b64decode is removed since the input to the `diff` parameter will be a string-based document ID.  
-4. `apps/domain/src/main/core/model_centric/cycles/worker_cycle.py`: in the database schema, changed diff from binary to string
-5. `apps/domain/src/main/core/model_centric/cycles/cycle_manager.py`: in the `_average_plan_diffs` function, removed code for running averaging locally, and call the `Runaveraging` function in the next step instead
-6. `apps/domain/src/main/core/model_centric/cycles/send_avgrequest.py` : submit the averaging Parcel Job, download the Job output, which is the improved model, and start the next training cycle
+1. `Dockerfile`: the Docker file that is used to build the image for weight averaging for intermediate cycles
+2. `Dockerfile_crypten`: the Docker file that is used to build the image for final cycle weight averaging and outputs two encrypted model weight files for SMPC inferencing
+3. `apps/domain/src/main/avg.py`: the averaging work used in the Docker image 1 (copy this to the same directory as the dockerfile if you build the docker image yourselves)
+4. `apps/domain/src/main/avgfinal.py`: the averaging work used in the Docker image 2 (copy this to the same directory as the dockerfile if you build the docker image yourselves)
+5. `apps/domain/src/main/events/model_centric/fl_events.py`:  In the `report` function, the code for doing b64decode is removed since the input to the `diff` parameter will be a string-based document ID.  In the `host_federated_learning` function, code for retrieving the inference model is added.  
+6. `apps/domain/src/main/core/model_centric/controller/fl_controller.py`: Saving the inference model to the `/pygrid/models` directory (please create this directory in advance)
+7. `apps/domain/src/main/core/model_centric/cycles/worker_cycle.py`: in the database schema, changed diff from binary to string
+8. `apps/domain/src/main/core/model_centric/cycles/cycle_manager.py`: in the `_average_plan_diffs` function, removed code for running averaging locally, and call the `Runaveraging` function in the next step instead
+9. `apps/domain/src/main/core/model_centric/cycles/send_avgrequest.py` : submit the averaging Parcel Job, download the Job output, which is the improved model, and start the next training cycle. In case it is the final cycle, the improved model will not be downloaded, but the encrypted model weights will be output to the SMPC workers directly.
 
 ## Setup
 
@@ -26,7 +29,7 @@ Please refer to the PyGrid instructions for environment setup before following t
 
 1. Install the following pip packages: `python-jose`, `jwcrypto` for Parcel API authentication
 2. Build and push the Docker image to Docker Hub using `./Dockerfile`
-3. Set the values of `PARCEL_CLIENT_ID`, `PARCEL_APP_ID`, `PARCEL_JWK`, `DOCKER_IMG_TAG` in `apps/domain/src/main/core/model_centric/cycles/send_avgrequest.py`
+3. Set the values of `PARCEL_CLIENT_ID`, `PARCEL_APP_ID`, `PARCEL_JWK`, `DOCKER_IMG_TAG`, `DOCKER_IMG_TAG2`, `SMPC_WORKER1`, `SMPC_WORKER2` in `apps/domain/src/main/core/model_centric/cycles/send_avgrequest.py`
 4. At `./apps/domain`, run `poetry run python ./src/__main__.py --name bob --port 7001 --start_local_db`
 
 ![PyGrid logo](https://raw.githubusercontent.com/OpenMined/design-assets/master/logos/PyGrid/horizontal-primary-trans.png)
