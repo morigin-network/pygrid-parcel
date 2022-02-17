@@ -1,6 +1,6 @@
 @startuml DeML Sequence
 
-' @Thomas
+' TODO: @Thomas
 ' draw sequence diagram to illustrate the work inside PyGrid in details,
 ' include at least the following:
 ' PyGrid, Parcel, Parcel jobs
