@@ -1,0 +1,14 @@
+@startuml DeML Sequence
+
+' @Thomas
+' draw sequence diagram to illustrate the work inside PyGrid in details,
+' include at least the following:
+' PyGrid, Parcel, Parcel jobs
+' Make reference to code file and function as appropriate
+
+participant PyGrid as pygrid
+database Parcel as parcel
+
+pygrid -> parcel: sample
+
+@enduml
