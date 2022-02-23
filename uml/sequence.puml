@@ -5,10 +5,40 @@
 ' include at least the following:
 ' PyGrid, Parcel, Parcel jobs
 ' Make reference to code file and function as appropriate
-
+skinparam maxMessageSize 150
+participant "Data\nScientist" as ds  
+participant "Data owner" as do
 participant PyGrid as pygrid
-database Parcel as parcel
+participant "Parcel\nRuntime" as parcel
+database "Parcel\nDocuments" as padb
 
-pygrid -> parcel: sample
+
+
+== Hosting a New Model ==
+ds -> pygrid: Connect Request (WebSocket)
+pygrid -> ds: Accept Connection 
+ds -> pygrid: host_federated_training request (parameters: train and inference model, training_plan ,averaging_plan, client_config, server_config)
+note left: training model is serialized with pysyft's own library,\ninference model is saved as plaintext source code\n(self-implemented by Thomas)\nand training_plan/averaging_plan are functions\n which are serialized with the @make_plan decorator.
+pygrid -> pygrid: Create new process(with a new unique process id), Start a new cycle, then save everything to database.
+== Cycle Request ==
+do -> pygrid: Connect request (Websocket, Parameters: model_name and version, auth_token)
+pygrid -> pygrid: Verify auth_token with respect to the model
+pygrid -> pygrid: Create and save worker_id
+pygrid -> do: Accept Connection (return worker_id)
+do -> pygrid: Cycle request (Parameters: worker_id, model, version, download and upload times)
+pygrid -> pygrid: Perform speed test if necessary, check last participation and compare against config
+pygrid -> do: (If accept) request_key, model_id, training_plan_id
+do -> pygrid: get_model request (Parameters: worker_id, request_key, model_id)
+pygrid -> do: model parameters
+do -> pygrid: get_plan request (Parameters: worker_id, request_key, training_plan_id)
+pygrid -> do: training plan (a serialized function)
+do -> do: Do the training locally 
+do -> do: serialize new parameters to string, then further b64encode it
+do -> padb: save parameter to parcel
+padb -> do: Document ID
+do -> pygrid: 
+
+
+
 
 @enduml
