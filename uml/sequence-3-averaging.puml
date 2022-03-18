@@ -1,0 +1,30 @@
+@startuml Cycle Request
+
+skinparam maxMessageSize 300
+
+participant PyGrid as grid
+database DB as db
+participant "Parcel\nRuntime" as parcel
+database "Parcel\nDocuments" as padb
+
+== Averaging ==
+note over grid, padb: Everything here is in core/model_centric/cycles/cycle_manager.py and send_avgrequest.py
+grid -> db: retrieve(document_ids, averaging_plan, latest model parameters)
+grid -> padb: store(averaging plan, parameters)
+padb --> grid: document_ids
+alt current_cycle is not final
+    grid -> parcel: create_compute_job([{document_id, mount_path}], mid_averaging_image_tag)
+    parcel --> padb: averaged_weights
+    parcel --> grid: job output's document_ids
+    grid -> padb: download(averaged_weights_document_id)
+    grid -> grid: store(averaged_weights)
+else current_cycle is final
+    grid -> db: retrieve(inference_model)
+    grid -> padb: store(inference_model)
+    padb --> grid: document_id
+    grid -> parcel: create_compute_job([{document_id, mount_path}], final_averaging_image_tag)
+    parcel --> padb: splitted & encrypted model weight state_dicts with owners set as SMPC workers
+    padb -> grid: job output's document_ids
+end
+
+@enduml

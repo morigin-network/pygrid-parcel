@@ -1,0 +1,27 @@
+@startuml Host a New Model
+
+skinparam maxMessageSize 300
+
+participant PySyft as syft
+participant PyGrid as grid
+database DB as db
+
+== Host a New Model ==
+syft -> syft: serialize(training_model)
+syft -> syft: serialize(inference_model)
+note left: saved as plaintext source code\n(implemented by Thomas)
+syft -> syft: serialize(training_plan, averaging_plan)
+note left: plans are functions serialized with\nthe @make_plan decorator
+
+syft -> grid: request_connect()
+note left: WebSocket
+grid --> syft: accept
+
+syft -> grid: request_host_federated_training(training_model, inference_model, training_plan, averaging_plan, client_config, server_config)
+grid -> grid: host_federated_training()
+note left: events/model_centric/fl_events.py
+grid -> grid: start_new_cycle()
+grid -> db: store()
+'TODO: @Thomas What's stored in DB?
+
+@enduml
