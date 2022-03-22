@@ -2,8 +2,6 @@
 
 skinparam maxMessageSize 300
 
-actor "Data\nScientist" as ds  
-participant PySyft as syft
 participant "Data owner" as do
 participant PyGrid as grid
 database DB as db
