@@ -1,4 +1,4 @@
-@startuml Cycle Request
+@startuml Averaging
 
 skinparam maxMessageSize 300
 
