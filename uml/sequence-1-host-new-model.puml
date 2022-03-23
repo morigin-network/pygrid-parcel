@@ -23,5 +23,57 @@ note left: events/model_centric/fl_events.py
 grid -> grid: start_new_cycle()
 grid -> db: store()
 'TODO: @Thomas What's stored in DB?
+/'
+Database 
+(I try my best to understand its schema but not sure it is 100% correct)
+1. Process table : Basically is the root table that stores the whole model process (apps/domain/src/main/core/model_centric/processes/fl_process.py) 
+id (primary key)
+name (string)
+version (string)
+model  (ref model table)
+training plan  (ref plan table)
+averaging plan (ref plan table)
+protocols (NOT sure what is it, default to None) (ref protocol table)
+server_config (ref config table)
+client_config (ref config table)
+cycles (ref cycle table)
+
+2. Model table : Stores the model checkpoints (apps/domain/src/main/core/model_centric/models/ai_model.py)
+id (autoincrement primary key)
+version
+checkpoints (ref ModelCheckpoint table)
+fl_process_id 
+
+3. Cycle table : Stores a particular cycle (apps/domain/src/main/core/model_centric/cycles/cycle.py)
+id (autoincrement primary key)
+start (time)
+end (time)
+sequence 
+version 
+worker_cycles (ref worker cycle table)
+fl_process_id 
+is_completed 
+
+4. worker cycle : For a particular worker within a cycle
+id 
+request_key 
+cycle_id 
+worker_id 
+started_at 
+is_completed
+completed_at
+diff (added by me, this simply is the parcel document id)
+
+5. model checkpoiont (apps/domain/src/main/core/model_centric/models/ai_model.py)
+id 
+value (Largebinary, should store weights here)
+number 
+alias 
+model_id (backref model.id)
+
+6-7 Plan and Config and Protocol: Don't know where the schema is but fields should be quite intuitive 
+
+'/
+
 
 @enduml
