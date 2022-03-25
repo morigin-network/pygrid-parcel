@@ -14,19 +14,19 @@ note left: core/model_centric/auth/federated.py
 grid -> grid: assign_worker_id()
 note left: events/model_centric/fl_events.py\nCreate and save worker_id
 grid -> db: store(worker_id)
-'TODO: @Thomas Please confirm if worker_id goes to DB
-'Yes, in the worker-cycle table. Here it should create a new entry in the worker-cycle table
+note right: worker-cycle table
 grid --> do: worker_id
 
 do -> grid: request_cycle(worker_id, model, version, download_times, upload_times)
-'TODO: @Thomas What are up/download times?
-/'
-There seems to be a checking in the assign function of apps/domain/src/main/core/model_centric/controller/fl_controller.py
-which checks the provided up/download times against the server config. (There is also a field to specify min upload/download times in server config in pysyft)
-All the data seem to be provided by user and I don't know how useful it actually is in practice.
-'/
+note left
+    def assign in model_centric/controller/fl_controller.py
+    check user-provided speedrest result against server config
+end note
 grid -> grid: cycle_request()
-note left: events/model_centric/fl_events.py\nPerform speed test if necessary,\ncheck last participation and compare against config
+note left
+    events/model_centric/fl_events.py\nPerform speed test if necessary,
+    check last participation and compare against config
+end note
 grid --> do: request_key, model_id, training_plan_id
 do -> grid: get_model(worker_id, request_key, model_id)
 grid --> do: model parameters
@@ -34,11 +34,6 @@ do --> grid: get_plan(worker_id, request_key, training_plan_id)
 grid --> do: training plan (the serialized function)
 do -> do: train()
 do -> do: serialize(weight_updates)
-'TODO: @Thomas It was "new parameters", I assume they are weight updates?
-/'
-Yes yes yes the new weight difference
-'/
-
 do -> padb: store(serialized_weight_updates)
 padb --> do: document_id
 do -> grid: report(worker_id, request_key, document_id)
