@@ -11,19 +11,19 @@ class Processes {
 	<pkey> id : Integer, Unique
     name : String
     version : String
-    model : Model
-    training_plan : Plan
-    averaging_plan : Plan
-    protocols : Protocol
-    server_config : Config
-    client_config : Config
-    cycles : [Cycles]
+    <rel> model : Model
+    <rel> training_plan : Plan
+    <rel> averaging_plan : Plan
+    <rel> protocols : Protocol
+    <rel> server_config : Config
+    <rel> client_config : Config
+    <rel> cycles : [Cycles]
 }
 note right: Add entry to this table (and its child) when calling request_host_federated_learning()
 class Model {
 	<pkey> id : Integer, Unique
     version : String
-    checkpoints : [ModelCheckpoint]
+    <rel> checkpoints : [ModelCheckpoint]
     <fkey> fl_process_id : Processes.id
 }
 class ModelCheckpoint {
@@ -39,7 +39,7 @@ class Cycles{
     end : DateTime
     sequence : Integer
     version : String
-    worker_cycles : [WorkerCycle]
+    <rel> worker_cycles : [WorkerCycle]
     <fkey> fl_process_id : Processes.id
     is_completed : Boolean
 }
@@ -59,7 +59,7 @@ class Worker {
     ping : Float
     avg_download : FLoat
     avg_upload : Float
-    worker_Cycle: [WorkerCycle]
+    <rel> worker_Cycle: [WorkerCycle]
 }
 class Plan {
 	<pkey> id : Integer, Unique
