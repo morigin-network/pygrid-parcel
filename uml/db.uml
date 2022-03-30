@@ -1,0 +1,88 @@
+@startuml
+Processes -- Model
+Processes -- Plan
+Processes -- Protocol
+Processes -- Config
+Processes -- Cycles
+Model -- ModelCheckpoint
+Cycles -- WorkerCycle
+Worker -- WorkerCycle
+class Processes {
+	id : Integer, Unique
+    name : String
+    version : String
+    model : Model
+    training_plan : Plan
+    averaging_plan : Plan
+    protocols : Protocol
+    server_config : Config
+    client_config : Config
+    cycles : [Cycles]
+}
+note right: Add entry to this table (and its child) when calling request_host_federated_learning()
+class Model {
+	id : Integer, Unique
+    version : String
+    checkpoints : [ModelCheckpoint]
+    fl_process_id : Processes.id
+}
+class ModelCheckpoint {
+	id : Integer, Unique
+    value : LargeBinary 
+    number : Integer
+    model_id : Model.id
+}
+note right : Store model weights in value
+class Cycles{
+	id : Integer, Unique
+    start : DateTime
+    end : DateTime
+    sequence : Integer
+    version : String
+    worker_cycles : [WorkerCycle]
+    fl_process_id : Processes.id
+    is_completed : Boolean
+}
+class WorkerCycle {
+	id : Integer, Unique
+    {field}request_key : String(len 2048)
+    cycle_id : Cycles.id
+    worker_id : Worker.id
+    {field}started_at : DateTime, default to now()
+    is_completed : Boolean
+    completed_at : DateTime
+    diff: String
+}
+note right: Store Parcel Document ID in diff
+class Worker {
+	id : String, Unique
+    ping : Float
+    avg_download : FLoat
+    avg_upload : Float
+    worker_Cycle: [WorkerCycle]
+}
+class Plan {
+	id : Integer, Unique
+    name : String
+    {field}value : Binary (Python code)
+    {field}value_ts : Binary (TorchScript)
+    {field}value_tfjs : Binary (TensorFlow.js)
+    is_avg_plan : Boolean
+    fl_process_id : Processes.id
+}
+class Protocol {
+	id: Integer, Unique
+    name : String
+    value : Binary
+    value_ts : Binary
+    value_tfjs : Binary
+    fl_process_id : Processes.id
+}
+note bottom: Could Omit? Not sure any use for this
+class Config {
+	id : Integer, Unique
+    {field} config : PickleType (dictionary)
+    is_server_config : Boolean
+    fl_process_id : Processes.id
+}
+@enduml
