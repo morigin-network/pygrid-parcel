@@ -1,12 +1,14 @@
-@startuml
-Processes --> Model : 1to1
-Processes --> Plan : 1to1
-Processes --> Protocol : 1to1
-Processes --> Config : 1to1
-Processes --> Cycles : 1toMany
-Model --> ModelCheckpoint : 1toMany
-Cycles --> WorkerCycle : 1toMany
-Worker --> WorkerCycle : 1toMany
+@startuml PyGrid Database
+
+Processes --> "1..1" Model
+Processes --> "1..1" Plan
+Processes --> "1..1" Protocol
+Processes --> "1..1" Config
+Processes --> "1..*" Cycles
+Model --> "1..*" ModelCheckpoint
+Cycles --> "0..*" WorkerCycle
+Worker --> "0..*" WorkerCycle
+
 class Processes {
 	<pkey> id : Integer, Unique
     name : String
@@ -19,20 +21,26 @@ class Processes {
     <rel> client_config : Config
     <rel> cycles : [Cycles]
 }
-note right: Add entry to this table (and its child) when calling request_host_federated_learning()
+note right
+Add entry to this table (and its child)
+when calling request_host_federated_learning()
+end note
+
 class Model {
 	<pkey> id : Integer, Unique
     version : String
     <rel> checkpoints : [ModelCheckpoint]
     <fkey> fl_process_id : Processes.id
 }
+
 class ModelCheckpoint {
 	<pkey> id : Integer, Unique
     value : LargeBinary 
     number : Integer
     <fkey> model_id : Model.id
 }
-note right : Store model weights in value
+note right : Store model weights in `value`
+
 class Cycles{
 	<pkey> id : Integer, Unique
     start : DateTime
@@ -43,6 +51,7 @@ class Cycles{
     <fkey> fl_process_id : Processes.id
     is_completed : Boolean
 }
+
 class WorkerCycle {
 	<pkey> id : Integer, Unique
     {field}request_key : String(len 2048)
@@ -53,7 +62,8 @@ class WorkerCycle {
     completed_at : DateTime
     diff: String
 }
-note right: Store Parcel Document ID in diff
+note right: Store Parcel Document ID in `diff`
+
 class Worker {
 	<pkey> id : String, Unique
     ping : Float
@@ -61,6 +71,7 @@ class Worker {
     avg_upload : Float
     <rel> worker_Cycle: [WorkerCycle]
 }
+
 class Plan {
 	<pkey> id : Integer, Unique
     name : String
@@ -70,6 +81,7 @@ class Plan {
     is_avg_plan : Boolean
     <fkey> fl_process_id : Processes.id
 }
+
 class Protocol {
 	<pkey> id: Integer, Unique
     name : String
@@ -79,10 +91,12 @@ class Protocol {
     <fkey> fl_process_id : Processes.id
 }
 note bottom: Could Omit? Not sure any use for this
+
 class Config {
 	<pkey> id : Integer, Unique
     {field} config : PickleType (dictionary)
     is_server_config : Boolean
     <fkey> fl_process_id : Processes.id
 }
+
 @enduml
