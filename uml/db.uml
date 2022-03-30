@@ -1,14 +1,14 @@
 @startuml
-Processes -- Model
-Processes -- Plan
-Processes -- Protocol
-Processes -- Config
-Processes -- Cycles
-Model -- ModelCheckpoint
-Cycles -- WorkerCycle
-Worker -- WorkerCycle
+Processes --> Model : 1to1
+Processes --> Plan : 1to1
+Processes --> Protocol : 1to1
+Processes --> Config : 1to1
+Processes --> Cycles : 1toMany
+Model --> ModelCheckpoint : 1toMany
+Cycles --> WorkerCycle : 1toMany
+Worker --> WorkerCycle : 1toMany
 class Processes {
-	id : Integer, Unique
+	<pkey> id : Integer, Unique
     name : String
     version : String
     model : Model
@@ -21,33 +21,33 @@ class Processes {
 }
 note right: Add entry to this table (and its child) when calling request_host_federated_learning()
 class Model {
-	id : Integer, Unique
+	<pkey> id : Integer, Unique
     version : String
     checkpoints : [ModelCheckpoint]
-    fl_process_id : Processes.id
+    <fkey> fl_process_id : Processes.id
 }
 class ModelCheckpoint {
-	id : Integer, Unique
+	<pkey> id : Integer, Unique
     value : LargeBinary 
     number : Integer
-    model_id : Model.id
+    <fkey> model_id : Model.id
 }
 note right : Store model weights in value
 class Cycles{
-	id : Integer, Unique
+	<pkey> id : Integer, Unique
     start : DateTime
     end : DateTime
     sequence : Integer
     version : String
     worker_cycles : [WorkerCycle]
-    fl_process_id : Processes.id
+    <fkey> fl_process_id : Processes.id
     is_completed : Boolean
 }
 class WorkerCycle {
-	id : Integer, Unique
+	<pkey> id : Integer, Unique
     {field}request_key : String(len 2048)
-    cycle_id : Cycles.id
-    worker_id : Worker.id
+    <fkey> cycle_id : Cycles.id
+    <fkey> worker_id : Worker.id
     {field}started_at : DateTime, default to now()
     is_completed : Boolean
     completed_at : DateTime
@@ -55,34 +55,34 @@ class WorkerCycle {
 }
 note right: Store Parcel Document ID in diff
 class Worker {
-	id : String, Unique
+	<pkey> id : String, Unique
     ping : Float
     avg_download : FLoat
     avg_upload : Float
     worker_Cycle: [WorkerCycle]
 }
 class Plan {
-	id : Integer, Unique
+	<pkey> id : Integer, Unique
     name : String
     {field}value : Binary (Python code)
     {field}value_ts : Binary (TorchScript)
     {field}value_tfjs : Binary (TensorFlow.js)
     is_avg_plan : Boolean
-    fl_process_id : Processes.id
+    <fkey> fl_process_id : Processes.id
 }
 class Protocol {
-	id: Integer, Unique
+	<pkey> id: Integer, Unique
     name : String
     value : Binary
     value_ts : Binary
     value_tfjs : Binary
-    fl_process_id : Processes.id
+    <fkey> fl_process_id : Processes.id
 }
 note bottom: Could Omit? Not sure any use for this
 class Config {
-	id : Integer, Unique
+	<pkey> id : Integer, Unique
     {field} config : PickleType (dictionary)
     is_server_config : Boolean
-    fl_process_id : Processes.id
+    <fkey> fl_process_id : Processes.id
 }
 @enduml
