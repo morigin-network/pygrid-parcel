@@ -1,0 +1,102 @@
+@startuml Database
+
+Processes --> "1..1" Model
+Processes --> "1..1" Plan
+Processes --> "1..1" Protocol
+Processes --> "1..1" Config
+Processes --> "1..*" Cycles
+Model --> "1..*" ModelCheckpoint
+Cycles --> "0..*" WorkerCycle
+Worker --> "0..*" WorkerCycle
+
+class Processes {
+	<pkey> id : Integer, Unique
+    name : String
+    version : String
+    <rel> model : Model
+    <rel> training_plan : Plan
+    <rel> averaging_plan : Plan
+    <rel> protocols : Protocol
+    <rel> server_config : Config
+    <rel> client_config : Config
+    <rel> cycles : [Cycles]
+}
+note right
+Add entry to this table (and its child)
+when calling request_host_federated_learning()
+end note
+
+class Model {
+	<pkey> id : Integer, Unique
+    version : String
+    <rel> checkpoints : [ModelCheckpoint]
+    <fkey> fl_process_id : Processes.id
+}
+
+class ModelCheckpoint {
+	<pkey> id : Integer, Unique
+    value : LargeBinary 
+    number : Integer
+    <fkey> model_id : Model.id
+}
+note right : Store model weights in `value`
+
+class Cycles{
+	<pkey> id : Integer, Unique
+    start : DateTime
+    end : DateTime
+    sequence : Integer
+    version : String
+    <rel> worker_cycles : [WorkerCycle]
+    <fkey> fl_process_id : Processes.id
+    is_completed : Boolean
+}
+
+class WorkerCycle {
+	<pkey> id : Integer, Unique
+    {field}request_key : String(len 2048)
+    <fkey> cycle_id : Cycles.id
+    <fkey> worker_id : Worker.id
+    {field}started_at : DateTime, default to now()
+    is_completed : Boolean
+    completed_at : DateTime
+    diff: String
+}
+note right: Store Parcel Document ID in `diff`
+
+class Worker {
+	<pkey> id : String, Unique
+    ping : Float
+    avg_download : FLoat
+    avg_upload : Float
+    <rel> worker_Cycle: [WorkerCycle]
+}
+
+class Plan {
+	<pkey> id : Integer, Unique
+    name : String
+    {field}value : Binary (Python code)
+    {field}value_ts : Binary (TorchScript)
+    {field}value_tfjs : Binary (TensorFlow.js)
+    is_avg_plan : Boolean
+    <fkey> fl_process_id : Processes.id
+}
+
+class Protocol {
+	<pkey> id: Integer, Unique
+    name : String
+    value : Binary
+    value_ts : Binary
+    value_tfjs : Binary
+    <fkey> fl_process_id : Processes.id
+}
+note bottom: Could Omit? Not sure any use for this
+
+class Config {
+	<pkey> id : Integer, Unique
+    {field} config : PickleType (dictionary)
+    is_server_config : Boolean
+    <fkey> fl_process_id : Processes.id
+}
+
+@enduml
